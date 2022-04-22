@@ -3,32 +3,33 @@ const geocode = require('./utils/geocode')
 const forecast = require('./utils/forecast')
 require('dotenv').config()
 
-var app = express();
+const app = express();
+app.use(express.json());
 
 const port = process.env.PORT || 3000;
 
+/**
+ * @api {get} / Test
+ */
 app.get('/' , (req,res) => {
     res.send("Welcome")
 });
 
-//Sehrin havadurumu   => /havadurumu/istenilensehir exp:LosAngeles
+/**
+ * @api {get} /weather/:city Get a city weather information
+ */
 app.get('/weather/:city' ,(req,res) => {
-
-    geocode.geocode(req.params.city, (err,{latitude,longitude}) => {
-        if(err){
-            return res.send(err)
-        }else{
-            forecast.forecast(latitude, longitude, (err, forecastData) => {
-                if(err) {
-                    return res.send(err)
+    geocode(req.params.city, (err, cords) => {
+        if(!err) {
+            forecast(cords, (err, forecastData) => {
+                if(!err) {
+                    return res.send(forecastData)
                 }
-                return res.send(forecastData)
+                return res.send(err)
             })
         }
     })
-    
 })
-
 
 app.listen(port, () => {
     console.log("server is running on "+ port);

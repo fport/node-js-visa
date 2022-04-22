@@ -1,27 +1,36 @@
-//enlem ve boylam bilgileri degerlendirilir
+//enlem ve boylam bilgileri weatherstack apide kullanılır
+const axios = require('axios');
 
-const request = require('request');
+const getForecast = async (url) => {
+    try {
+        return await axios.get(url)
+        .then(res => {
+            return res.data.current
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
 
-const forecast = (latitude, longitude, callback) => {
-    const url = 'http://api.weatherstack.com/current?access_key=7d65e9275167f07f608e49cfa2edbbd3&query=' + latitude + ',' + longitude + '&units=m';
+const forecast = (cords, callback) => {
+    const accessKey = process.env.ACCESS_KEY;
+    const url = `http://api.weatherstack.com/current?access_key=${accessKey}&query=${cords[0]},${cords[1]}&units=m`;
 
-    request({url:url, json:true},(error, response) => {
-        if(error){
-            return callback('Unable to connect to weather service',undefined)
-        }else{
-            console.log('response.body.current',response.body.current);
+    getForecast(url)
+    .then(res => {
+        if(res) {
+            console.log('osman=>',res);
             const data = {
-            temprature : response.body.current.temperature,
-            weather_desc : response.body.current.weather_descriptions[0],
-            feelslike : response.body.current.feelslike
-        }
-            
-            callback(undefined, data)
+                temprature : res.temperature,
+                weather_desc : res.weather_descriptions[0],
+                feelslike : res.feelslike
+            }
+            return callback(undefined, data)
+        } else {
+            return callback('hatalı istek', undefined)
         }
     })
+    .catch (err => console.log(err))
 }
 
-
-module.exports = {
-    forecast : forecast
-}
+module.exports = forecast;
